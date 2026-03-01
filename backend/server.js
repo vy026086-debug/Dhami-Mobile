@@ -19,18 +19,12 @@ app.use(cors({
 }));
 
 // 1. Database Connection (MongoDB Atlas Cloud)
-// Cloud Database se connection - kahin se bhi access ho sakta hai!
-const dbURI = "mongodb+srv://Vishal:Dhami@123@cluster0.sx1udbo.mongodb.net/dhamiMobile?retryWrites=true&w=majority&appName=Cluster0";
+// Ye code environment variable se link uthayega
+const dbURI = process.env.MONGODB_URI;
 
 mongoose.connect(dbURI)
-.then(() => {
-    console.log("-----------------------------------------");
-    console.log("Bhai, Cloud Database (Atlas) Se Connection Pakka! 🚀");
-    console.log("-----------------------------------------");
-})
-.catch(err => {
-    console.log("Atlas Connection mein gadbad:", err);
-});
+  .then(() => console.log('Bhai, Cloud Database Se Connection Pakka!'))
+  .catch((err) => console.log('Atlas Connection mein gadbad:', err));
 
 // 2. Ek Basic Route (Check karne ke liye)
 app.get('/', (req, res) => {
