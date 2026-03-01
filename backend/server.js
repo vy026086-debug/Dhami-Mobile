@@ -12,7 +12,11 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: '*', // Isse Netlify ko permission mil jayegi
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // 1. Database Connection (MongoDB Atlas Cloud)
 // Cloud Database se connection - kahin se bhi access ho sakta hai!

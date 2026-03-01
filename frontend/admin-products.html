@@ -93,7 +93,7 @@
 
         // Load products
         function loadProducts() {
-            fetch('http://localhost:5005/api/products')
+            fetch('https://dhami-mobile.onrender.com/api/products')
                 .then(res => res.json())
                 .then(products => {
                     displayProducts(products);
@@ -144,7 +144,7 @@
                 stock: document.getElementById('product-stock').value
             };
 
-            fetch('http://localhost:5005/api/products/add', {
+            fetch('https://dhami-mobile.onrender.com/api/products/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(productData)
@@ -173,7 +173,7 @@
         function deleteProduct(id) {
             if (!confirm('Are you sure you want to delete this product?')) return;
             
-            fetch(`http://localhost:5005/api/products/${id}`, {
+            fetch(`https://dhami-mobile.onrender.com/api/products/${id}`, {
                 method: 'DELETE'
             })
             .then(res => res.json())

@@ -123,7 +123,7 @@
         }
 
         function loadBookings() {
-fetch('http://localhost:5005/api/bookings')
+fetch('https://dhami-mobile.onrender.com/api/bookings')
                 .then(res => res.json())
                 .then(data => {
                     allBookings = data;
@@ -229,7 +229,7 @@ fetch('http://localhost:5005/api/bookings')
             const bookingId = document.getElementById('update-booking-id').value;
             const newStatus = document.getElementById('update-status').value;
 
-fetch(`http://localhost:5005/api/bookings/${bookingId}`, {
+fetch(`https://dhami-mobile.onrender.com/api/bookings/${bookingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })

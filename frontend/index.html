@@ -176,7 +176,7 @@
 
         // Load products from backend
         function loadProducts() {
-fetch('http://localhost:5005/api/products')
+fetch('https://dhami-mobile.onrender.com/api/products')
                 .then(res => res.json())
                 .then(products => {
                     allProducts = products;
@@ -282,7 +282,7 @@ fetch('http://localhost:5005/api/products')
                 bookingTime: document.getElementById('bookingTime').value
             };
 
-fetch('http://localhost:5005/api/bookings/add', {
+fetch('https://dhami-mobile.onrender.com/api/bookings/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bookingData)
