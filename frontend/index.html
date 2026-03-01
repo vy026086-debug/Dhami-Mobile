@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhami Mobile Shop - Bhiwani</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 p-4 text-white flex justify-between items-center shadow-lg">
+        <h1 class="text-2xl font-bold">📱 Dhami Mobile Shop</h1>
+        <div id="user-info" class="flex gap-3 items-center">
+            <a href="cart.html" class="relative bg-white text-blue-600 px-4 py-1 rounded hover:bg-gray-100 font-semibold">
+                🛒 My Cart 
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full px-2 text-xs">0</span>
+            </a>
+            <span id="welcome-msg" class="hidden">Welcome, <span id="user-name"></span>!</span>
+            <button onclick="location.href='login.html'" id="login-btn" class="bg-white text-blue-600 px-4 py-1 rounded hover:bg-gray-100 font-semibold">Login</button>
+            <button onclick="logout()" id="logout-btn" class="hidden bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 font-semibold">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Contact Header -->
+    <div class="bg-yellow-50 p-6 border-b-2 border-yellow-200 text-center shadow-sm">
+        <h1 class="text-4xl font-extrabold text-blue-800 uppercase tracking-widest">Dhami Mobile Shop</h1>
+        <p class="text-lg text-gray-700 mt-2 font-medium">
+            📍 Fancy Chowk, Near Jalan Hospital, Bhiwani (127021)
+        </p>
+        <div class="flex justify-center gap-6 mt-4">
+            <a href="tel:8307968872" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold shadow-md hover:bg-blue-700">
+                📞 Call: 8307968872
+            </a>
+            <a href="https://wa.me/918307968872" target="_blank" class="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-md hover:bg-green-600">
+                💬 WhatsApp
+            </a>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12 px-6 text-center">
+        <h2 class="text-4xl font-bold mb-2">Best Mobile Repair & Accessories Shop in Bhiwani</h2>
+        <p class="text-lg"> Quality repairs, original accessories, and best deals on mobiles!</p>
+    </div>
+
+    <!-- Products Section -->
+    <div class="container mx-auto p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-semibold text-gray-800">🛒 Our Products & Services</h2>
+            <button onclick="openBookingModal()" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 font-semibold shadow">
+                📅 Book Appointment
+            </button>
+        </div>
+        
+        <!-- Category Filter -->
+        <div class="flex gap-2 mb-6 flex-wrap">
+            <button onclick="filterProducts('all')" class="category-btn bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">All</button>
+            <button onclick="filterProducts('Mobile')" class="category-btn bg-gray-200 text-gray-700 px-4 py-1 rounded hover:bg-gray-300">New Mobiles</button>
+            <button onclick="filterProducts('Accessories')" class="category-btn bg-gray-200 text-gray-700 px-4 py-1 rounded hover:bg-gray-300">Accessories</button>
+            <button onclick="filterProducts('Repairing')" class="category-btn bg-gray-200 text-gray-700 px-4 py-1 rounded hover:bg-gray-300">Repairing</button>
+            <button onclick="filterProducts('Old-Mobile')" class="category-btn bg-gray-200 text-gray-700 px-4 py-1 rounded hover:bg-gray-300">Old Mobiles</button>
+        </div>
+
+        <div id="product-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Products will be loaded here -->
+            <div class="col-span-full text-center py-10 text-gray-500">
+                <p class="text-xl">Loading products...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="modal">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">📅 Book Appointment</h3>
+                <button onclick="closeBookingModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <form id="booking-form" onsubmit="submitBooking(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Mobile Model</label>
+                    <input type="text" id="mobileModel" required placeholder="e.g., Vivo V20, iPhone 13"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Problem / Service Required</label>
+                    <select id="problem" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Service</option>
+                        <option value="Display Repair">📱 Display Repair</option>
+                        <option value="Battery Replacement">🔋 Battery Replacement</option>
+                        <option value="Charging Issue">🔌 Charging Issue</option>
+                        <option value="Speaker/Mic Problem">🔊 Speaker/Mic Problem</option>
+                        <option value="Software Issue">💾 Software Issue</option>
+                        <option value="Water Damage">💧 Water Damage</option>
+                        <option value="Other">🔧 Other</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Preferred Date</label>
+                    <input type="date" id="bookingDate" required
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Preferred Time</label>
+                    <select id="bookingTime" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Time</option>
+                        <option value="09:00 AM">09:00 AM - 11:00 AM</option>
+                        <option value="11:00 AM">11:00 AM - 01:00 PM</option>
+                        <option value="02:00 PM">02:00 PM - 04:00 PM</option>
+                        <option value="04:00 PM">04:00 PM - 06:00 PM</option>
+                        <option value="06:00 PM">06:00 PM - 08:00 PM</option>
+                    </select>
+                </div>
+                
+                <div id="login-warning" class="hidden bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded mb-4">
+                    ⚠️ Please login to book appointment!
+                </div>
+                
+                <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 font-semibold">
+                    ✅ Book Now
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div id="success-message" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden">
+        <span id="success-text"></span>
+    </div>
+
+    <script>
+        let allProducts = [];
+        let currentUser = null;
+
+        // Check if user is logged in
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            if (token && user) {
+                currentUser = JSON.parse(user);
+                document.getElementById('welcome-msg').classList.remove('hidden');
+                document.getElementById('user-name').textContent = currentUser.name;
+                document.getElementById('login-btn').classList.add('hidden');
+                document.getElementById('logout-btn').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            currentUser = null;
+            location.reload();
+        }
+
+        // Load products from backend
+        function loadProducts() {
+fetch('http://localhost:5005/api/products')
+                .then(res => res.json())
+                .then(products => {
+                    allProducts = products;
+                    displayProducts(products);
+                })
+                .catch(err => {
+                    console.error('Error loading products:', err);
+                    document.getElementById('product-list').innerHTML = `
+                        <div class="col-span-full text-center py-10 text-red-500">
+                            <p class="text-xl">❌ Error loading products. Make sure server is running!</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function displayProducts(products) {
+            const list = document.getElementById('product-list');
+            if (products.length === 0) {
+                list.innerHTML = `
+                    <div class="col-span-full text-center py-10 text-gray-500">
+                        <p class="text-xl">No products found!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = products.map(p => `
+                <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow">
+                    ${p.image ? `<img src="${p.image}" alt="${p.name}" class="w-full h-40 object-cover rounded mb-3">` : 
+                      `<div class="w-full h-40 bg-gray-200 rounded mb-3 flex items-center justify-center text-4xl">📱</div>`}
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">${p.name}</h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${p.category}</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-2">${p.description || 'No description'}</p>
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-green-600 font-bold text-xl">₹${p.price}</p>
+                        <span class="text-sm ${p.stock > 0 ? 'text-green-500' : 'text-red-500'}">
+                            ${p.stock > 0 ? `✓ ${p.stock} in stock` : 'Out of stock'}
+                        </span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="bookOnWhatsApp('${p.name}', '${p.price}')" class="bg-green-600 text-white px-3 py-2 rounded flex-1 font-bold text-sm hover:bg-green-700">
+                            🟢 Book Now
+                        </button>
+                        <button onclick="addToCart('${p._id}', '${p.name}', '${p.price}')" class="bg-blue-600 text-white px-3 py-2 rounded flex-1 font-bold text-sm hover:bg-blue-700">
+                            🛒 Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProducts(category) {
+            // Update button styles
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600');
+                btn.classList.remove('text-white');
+                btn.classList.add('bg-gray-200');
+                btn.classList.add('text-gray-700');
+            });
+            event.target.classList.remove('bg-gray-200');
+            event.target.classList.remove('text-gray-700');
+            event.target.classList.add('bg-blue-600');
+            event.target.classList.add('text-white');
+
+            if (category === 'all') {
+                displayProducts(allProducts);
+            } else {
+                const filtered = allProducts.filter(p => p.category === category);
+                displayProducts(filtered);
+            }
+        }
+
+        function openBookingModal() {
+            if (!currentUser) {
+                document.getElementById('login-warning').classList.remove('hidden');
+                setTimeout(() => {
+                    location.href = 'login.html';
+                }, 1500);
+                return;
+            }
+            document.getElementById('booking-modal').classList.add('active');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('booking-modal').classList.remove('active');
+        }
+
+        function submitBooking(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                showSuccess('Please login first!', 'error');
+                return;
+            }
+
+            const bookingData = {
+                user: currentUser.id,
+                mobileModel: document.getElementById('mobileModel').value,
+                problem: document.getElementById('problem').value,
+                bookingDate: document.getElementById('bookingDate').value,
+                bookingTime: document.getElementById('bookingTime').value
+            };
+
+fetch('http://localhost:5005/api/bookings/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                showSuccess('✅ Appointment Booked Successfully!');
+                closeBookingModal();
+                document.getElementById('booking-form').reset();
+            })
+            .catch(err => {
+                showSuccess('❌ Error booking appointment!', 'error');
+            });
+        }
+
+        function showSuccess(message, type = 'success') {
+            const msg = document.getElementById('success-message');
+            msg.textContent = message;
+            msg.classList.remove('hidden', 'bg-green-500', 'bg-red-500');
+            if (type === 'error') {
+                msg.classList.add('bg-red-500');
+            } else {
+                msg.classList.add('bg-green-500');
+            }
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        }
+
+        // WhatsApp Booking Function
+        function bookOnWhatsApp(productName, price) {
+            const userName = localStorage.getItem('userName') || "Grahak"; // Agar login hai toh naam mil jayega
+            const ownerNumber = "918307968872"; // Aapka number
+            
+            // Message ka format
+            const message = `Ram Ram Dhami Mobile! 📱%0A%0A` +
+                            `Mera naam *${userName}* hai.%0A` +
+                            `Mujhe ye product book karna hai:%0A` +
+                            `📦 *Product:* ${productName}%0A` +
+                            `💰 *Price:* ₹${price}%0A%0A` +
+                            `⚠️ *Note:* Main 2 din ke andar shop par aa jaunga. Agar nahi aaya toh aap ise sell kar sakte hain.`;
+
+            const whatsappUrl = `https://wa.me/${ownerNumber}?text=${message}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Cart Functions
+        function addToCart(id, name, price) {
+            let cart = JSON.parse(localStorage.getItem('dhamiCart')) || [];
+            
+            // Check if product already exists in cart
+            const exists = cart.find(item => item.id === id);
+            if (exists) {
+                alert("Bhai, ye toh pehle se hi cart mein hai!");
+            } else {
+                cart.push({ id, name, price: parseInt(price), qty: 1 });
+                localStorage.setItem('dhamiCart', JSON.stringify(cart));
+                alert(`${name} Cart mein add ho gaya!`);
+                updateCartCount();
+            }
+        }
+
+        function updateCartCount() {
+            let cart = JSON.parse(localStorage.getItem('dhamiCart')) || [];
+            document.getElementById('cart-count').innerText = cart.length;
+        }
+
+        // Initialize
+        checkAuth();
+        loadProducts();
+        updateCartCount();
+    </script>
+</body>
+</html>

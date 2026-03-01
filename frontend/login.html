@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Dhami Mobile Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md mx-4">
+        <!-- Back Button -->
+        <a href="index.html" class="text-blue-600 hover:text-blue-700 flex items-center gap-1 mb-4">
+            ← Back to Shop
+        </a>
+
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">📱 Dhami Mobile Shop</h1>
+        
+        <!-- Tabs -->
+        <div class="flex border-b mb-6">
+            <button id="login-tab" onclick="showTab('login')" class="flex-1 py-2 text-center font-semibold tab-active">
+                Login
+            </button>
+            <button id="signup-tab" onclick="showTab('signup')" class="flex-1 py-2 text-center font-semibold text-gray-500">
+                Sign Up
+            </button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Phone Number</label>
+                <input type="tel" id="login-phone" required placeholder="Enter your phone number"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                <input type="password" id="login-password" required placeholder="Enter your password"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold">
+                Login
+            </button>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="signup-form" onsubmit="handleSignup(event)" class="hidden">
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Full Name</label>
+                <input type="text" id="signup-name" required placeholder="Enter your name"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Phone Number</label>
+                <input type="tel" id="signup-phone" required placeholder="Enter your phone number"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                <input type="password" id="signup-password" required placeholder="Create a password"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Confirm Password</label>
+                <input type="password" id="signup-confirm" required placeholder="Confirm your password"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-semibold">
+                Create Account
+            </button>
+        </form>
+
+        <!-- Error/Success Message -->
+        <div id="message" class="mt-4 p-3 rounded-lg text-center hidden"></div>
+
+        <!-- Admin Info -->
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <p class="text-sm text-blue-800 font-semibold">ℹ️ For Admin Access:</p>
+            <p class="text-xs text-blue-600">Contact the owner to get admin credentials. Admin can view and manage all bookings.</p>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'login';
+
+        function showTab(tab) {
+            currentTab = tab;
+            const loginTab = document.getElementById('login-tab');
+            const signupTab = document.getElementById('signup-tab');
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+
+            if (tab === 'login') {
+                loginTab.classList.add('tab-active');
+                loginTab.classList.remove('text-gray-500');
+                signupTab.classList.remove('tab-active');
+                signupTab.classList.add('text-gray-500');
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+            } else {
+                signupTab.classList.add('tab-active');
+                signupTab.classList.remove('text-gray-500');
+                loginTab.classList.remove('tab-active');
+                loginTab.classList.add('text-gray-500');
+                signupForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+            hideMessage();
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+            if (type === 'success') {
+                msg.classList.add('bg-green-100');
+                msg.classList.add('text-green-700');
+            } else {
+                msg.classList.add('bg-red-100');
+                msg.classList.add('text-red-700');
+            }
+        }
+
+        function hideMessage() {
+            document.getElementById('message').classList.add('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            hideMessage();
+
+            const phone = document.getElementById('login-phone').value;
+            const password = document.getElementById('login-password').value;
+
+fetch('http://localhost:5005/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('Login successful! Redirecting...', 'success');
+                    
+                    setTimeout(() => {
+                        if (data.user.role === 'admin') {
+                            location.href = 'admin.html';
+                        } else {
+                            location.href = 'index.html';
+                        }
+                    }, 1000);
+                } else {
+                    showMessage(data.message || 'Login failed!', 'error');
+                }
+            })
+            .catch(err => {
+                showMessage('Connection error! Please try again.', 'error');
+            });
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            hideMessage();
+
+            const name = document.getElementById('signup-name').value;
+            const phone = document.getElementById('signup-phone').value;
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+
+            if (password !== confirm) {
+                showMessage('Passwords do not match!', 'error');
+                return;
+            }
+
+            if (phone.length !== 10) {
+                showMessage('Please enter a valid 10-digit phone number!', 'error');
+                return;
+            }
+
+fetch('http://localhost:5005/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.user) {
+                    showMessage('Account created! Please login.', 'success');
+                    showTab('login');
+                } else {
+                    showMessage(data.message || 'Signup failed!', 'error');
+                }
+            })
+            .catch(err => {
+                showMessage('Connection error! Please try again.', 'error');
+            });
+        }
+
+        // Check if already logged in
+        const user = localStorage.getItem('user');
+        if (user) {
+            const userData = JSON.parse(user);
+            if (userData.role === 'admin') {
+                location.href = 'admin.html';
+            } else {
+                location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>

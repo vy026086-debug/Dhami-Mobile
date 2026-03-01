@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Dhami Mobile Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-pending { @apply text-yellow-600 font-bold; }
+        .status-confirmed { @apply text-blue-600 font-bold; }
+        .status-repaired { @apply text-green-600 font-bold; }
+        .status-cancelled { @apply text-red-600 font-bold; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 p-4 text-white flex justify-between items-center">
+        <h1 class="text-xl font-bold">Dhami Mobile - Admin Panel</h1>
+        <div class="flex items-center gap-4">
+            <span id="admin-name" class="text-sm"></span>
+            <a href="admin.html" class="px-3 py-2 hover:bg-gray-700 rounded inline-block">Dashboard</a>
+            <a href="admin-products.html" class="px-3 py-2 hover:bg-gray-700 rounded inline-block font-bold text-yellow-400">Manage Products</a>
+            <button onclick="logout()" class="bg-red-600 px-3 py-1 rounded">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Stats Cards -->
+    <div class="container mx-auto p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
+                <p class="text-gray-500 text-sm">Pending</p>
+                <p id="count-pending" class="text-2xl font-bold text-yellow-600">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+                <p class="text-gray-500 text-sm">Confirmed</p>
+                <p id="count-confirmed" class="text-2xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+                <p class="text-gray-500 text-sm">Repaired/Done</p>
+                <p id="count-repaired" class="text-2xl font-bold text-green-600">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
+                <p class="text-gray-500 text-sm">Total Bookings</p>
+                <p id="count-total" class="text-2xl font-bold text-purple-600">0</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-4">
+            <button onclick="showTab('all')" id="tab-all" class="bg-blue-600 text-white px-4 py-2 rounded">All Bookings</button>
+            <button onclick="showTab('Pending')" id="tab-pending" class="bg-gray-200 text-gray-700 px-4 py-2 rounded">Pending</button>
+            <button onclick="showTab('Confirmed')" id="tab-confirmed" class="bg-gray-200 text-gray-700 px-4 py-2 rounded">Confirmed</button>
+            <button onclick="showTab('Repaired')" id="tab-repaired" class="bg-gray-200 text-gray-700 px-4 py-2 rounded">Repaired</button>
+        </div>
+
+        <!-- Bookings Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="p-3 text-left">#</th>
+                        <th class="p-3 text-left">Customer</th>
+                        <th class="p-3 text-left">Mobile Model</th>
+                        <th class="p-3 text-left">Problem</th>
+                        <th class="p-3 text-left">Date & Time</th>
+                        <th class="p-3 text-center">Status</th>
+                        <th class="p-3 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-bookings">
+                    <tr>
+                        <td colspan="7" class="p-4 text-center text-gray-500">Loading bookings...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Update Status Modal -->
+    <div id="update-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-sm mx-4">
+            <h3 class="text-xl font-bold mb-4">Update Booking Status</h3>
+            <input type="hidden" id="update-booking-id">
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">New Status</label>
+                <select id="update-status" class="w-full px-3 py-2 border rounded-lg">
+                    <option value="Pending">⏳ Pending</option>
+                    <option value="Confirmed">✅ Confirmed</option>
+                    <option value="Repaired">🔧 Repaired</option>
+                    <option value="Cancelled">❌ Cancelled</option>
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="updateStatus()" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Update</button>
+                <button onclick="closeModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allBookings = [];
+
+        function checkAdminAuth() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert('Please login first!');
+                location.href = 'login.html';
+                return;
+            }
+            const userData = JSON.parse(user);
+            if (userData.role !== 'admin') {
+                alert('Access denied! Admin only.');
+                location.href = 'index.html';
+                return;
+            }
+            document.getElementById('admin-name').textContent = userData.name;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            location.href = 'login.html';
+        }
+
+        function loadBookings() {
+fetch('http://localhost:5005/api/bookings')
+                .then(res => res.json())
+                .then(data => {
+                    allBookings = data;
+                    updateStats();
+                    displayBookings(allBookings);
+                })
+                .catch(err => {
+                    console.error('Error loading bookings:', err);
+                    document.getElementById('admin-bookings').innerHTML = `
+                        <tr><td colspan="7" class="p-4 text-center text-red-500">Error loading bookings!</td></tr>
+                    `;
+                });
+        }
+
+        function updateStats() {
+            const pending = allBookings.filter(b => b.status === 'Pending').length;
+            const confirmed = allBookings.filter(b => b.status === 'Confirmed').length;
+            const repaired = allBookings.filter(b => b.status === 'Repaired').length;
+            
+            document.getElementById('count-pending').textContent = pending;
+            document.getElementById('count-confirmed').textContent = confirmed;
+            document.getElementById('count-repaired').textContent = repaired;
+            document.getElementById('count-total').textContent = allBookings.length;
+        }
+
+        function displayBookings(bookings) {
+            const tbody = document.getElementById('admin-bookings');
+            if (bookings.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="p-4 text-center text-gray-500">No bookings found!</td></tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = bookings.map((b, index) => {
+                let statusClass = '';
+                if (b.status === 'Pending') statusClass = 'text-yellow-600 font-bold';
+                else if (b.status === 'Confirmed') statusClass = 'text-blue-600 font-bold';
+                else if (b.status === 'Repaired') statusClass = 'text-green-600 font-bold';
+                else statusClass = 'text-red-600 font-bold';
+
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3">${index + 1}</td>
+                        <td class="p-3">
+                            <p class="font-semibold">${b.user?.name || 'Guest'}</p>
+                            <p class="text-sm text-gray-500">${b.user?.phone || '-'}</p>
+                        </td>
+                        <td class="p-3">${b.mobileModel}</td>
+                        <td class="p-3">${b.problem}</td>
+                        <td class="p-3">
+                            <p>📅 ${b.bookingDate}</p>
+                            <p class="text-sm text-gray-500">🕐 ${b.bookingTime}</p>
+                        </td>
+                        <td class="p-3 text-center">
+                            <span class="${statusClass}">${b.status}</span>
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="openUpdateModal('${b._id}')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                                Update
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showTab(status) {
+            // Update tab buttons
+            ['all', 'pending', 'confirmed', 'repaired'].forEach(tab => {
+                const btn = document.getElementById(`tab-${tab}`);
+                if (tab === status) {
+                    btn.classList.remove('bg-gray-200');
+                    btn.classList.remove('text-gray-700');
+                    btn.classList.add('bg-blue-600');
+                    btn.classList.add('text-white');
+                } else {
+                    btn.classList.remove('bg-blue-600');
+                    btn.classList.remove('text-white');
+                    btn.classList.add('bg-gray-200');
+                    btn.classList.add('text-gray-700');
+                }
+            });
+
+            if (status === 'all') {
+                displayBookings(allBookings);
+            } else {
+                const filtered = allBookings.filter(b => b.status === status);
+                displayBookings(filtered);
+            }
+        }
+
+        function openUpdateModal(bookingId) {
+            document.getElementById('update-booking-id').value = bookingId;
+            document.getElementById('update-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('update-modal').classList.add('hidden');
+        }
+
+        function updateStatus() {
+            const bookingId = document.getElementById('update-booking-id').value;
+            const newStatus = document.getElementById('update-status').value;
+
+fetch(`http://localhost:5005/api/bookings/${bookingId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert('Status updated successfully!');
+                closeModal();
+                loadBookings();
+            })
+            .catch(err => {
+                alert('Error updating status!');
+            });
+        }
+
+        // Initialize
+        checkAdminAuth();
+        loadBookings();
+    </script>
+</body>
+</html>

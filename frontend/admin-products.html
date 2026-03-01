@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Products - Dhami Mobile Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 p-4 text-white flex justify-between items-center">
+        <h1 class="text-xl font-bold">Dhami Mobile - Admin Panel</h1>
+        <div>
+            <a href="admin.html" class="px-3 py-2 hover:bg-gray-700 rounded inline-block">Dashboard</a>
+            <a href="admin-products.html" class="px-3 py-2 hover:bg-gray-700 rounded inline-block font-bold text-yellow-400">Manage Products</a>
+            <button onclick="logout()" class="ml-4 bg-red-600 px-3 py-1 rounded">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Add Product Section -->
+    <div class="container mx-auto p-6">
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">➕ Add New Product</h2>
+            <form id="add-product-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <input type="text" id="product-name" placeholder="Product Name" required
+                    class="px-3 py-2 border rounded-lg">
+                <select id="product-category" required class="px-3 py-2 border rounded-lg">
+                    <option value="">Select Category</option>
+                    <option value="Mobile">Mobile</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Repairing">Repairing</option>
+                    <option value="Old-Mobile">Old Mobile</option>
+                </select>
+                <input type="number" id="product-price" placeholder="Price (₹)" required
+                    class="px-3 py-2 border rounded-lg">
+                <input type="number" id="product-stock" placeholder="Stock" required
+                    class="px-3 py-2 border rounded-lg">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-semibold">
+                    Add Product
+                </button>
+            </form>
+            <div id="product-message" class="mt-4 p-3 rounded-lg text-center hidden"></div>
+        </div>
+
+        <!-- Products List -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">📦 Shop Inventory (Stocks)</h2>
+                <span id="total-products" class="text-gray-600">Total: 0</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="p-3">Product Name</th>
+                            <th class="p-3">Category</th>
+                            <th class="p-3">Price</th>
+                            <th class="p-3">Stock</th>
+                            <th class="p-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-product-list">
+                        <tr>
+                            <td colspan="5" class="p-4 text-center text-gray-500">Loading products...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check admin auth
+        function checkAdminAuth() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert('Please login first!');
+                location.href = 'login.html';
+                return;
+            }
+            const userData = JSON.parse(user);
+            if (userData.role !== 'admin') {
+                alert('Access denied! Admin only.');
+                location.href = 'index.html';
+                return;
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.href = 'login.html';
+        }
+
+        // Load products
+        function loadProducts() {
+            fetch('http://localhost:5005/api/products')
+                .then(res => res.json())
+                .then(products => {
+                    displayProducts(products);
+                    document.getElementById('total-products').textContent = `Total: ${products.length}`;
+                })
+                .catch(err => {
+                    console.error('Error loading products:', err);
+                    document.getElementById('admin-product-list').innerHTML = `
+                        <tr><td colspan="5" class="p-4 text-center text-red-500">Error loading products!</td></tr>
+                    `;
+                });
+        }
+
+        function displayProducts(products) {
+            const tbody = document.getElementById('admin-product-list');
+            if (products.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="5" class="p-4 text-center text-gray-500">No products found!</td></tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = products.map(p => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 font-semibold">${p.name}</td>
+                    <td class="p-3">
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${p.category}</span>
+                    </td>
+                    <td class="p-3 text-green-600 font-bold">₹${p.price}</td>
+                    <td class="p-3">${p.stock}</td>
+                    <td class="p-3">
+                        <button onclick="deleteProduct('${p._id}')" class="text-red-600 font-bold hover:text-red-700">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Add product
+        document.getElementById('add-product-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const productData = {
+                name: document.getElementById('product-name').value,
+                category: document.getElementById('product-category').value,
+                price: document.getElementById('product-price').value,
+                stock: document.getElementById('product-stock').value
+            };
+
+            fetch('http://localhost:5005/api/products/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                showMessage('✅ Product added successfully!', 'success');
+                document.getElementById('add-product-form').reset();
+                loadProducts();
+            })
+            .catch(err => {
+                showMessage('❌ Error adding product!', 'error');
+            });
+        });
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('product-message');
+            msg.textContent = text;
+            msg.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+            msg.classList.add(type === 'success' ? 'bg-green-100' : 'bg-red-100');
+            msg.classList.add(type === 'success' ? 'text-green-700' : 'text-red-700');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        }
+
+        // Delete product
+        function deleteProduct(id) {
+            if (!confirm('Are you sure you want to delete this product?')) return;
+            
+            fetch(`http://localhost:5005/api/products/${id}`, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert('Product deleted!');
+                loadProducts();
+            })
+            .catch(err => {
+                alert('Error deleting product!');
+            });
+        }
+
+        // Initialize
+        checkAdminAuth();
+        loadProducts();
+    </script>
+</body>
+</html>
